@@ -50,7 +50,7 @@ pub fn create_element(
         Restitution::coefficient(0.7),
         Damping {
             linear_damping: 0.5,
-            angular_damping: 1.0,
+            angular_damping: 10.0,
         },
     )
 }

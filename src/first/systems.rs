@@ -68,6 +68,7 @@ pub fn setup_system(
             Collider::cuboid(20., 15.),
             Restitution::coefficient(0.7),
             ExternalImpulse::default(),
+            KinematicCharacterController::default(),
         ))
         .id();
 

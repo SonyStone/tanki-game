@@ -194,7 +194,10 @@ dependencies = [
  "bevy_prototype_debug_lines",
  "bevy_prototype_lyon",
  "bevy_rapier2d",
+ "big-brain",
  "lyon",
+ "pancam",
+ "physics_2d_plugin",
  "rand",
 ]
 
@@ -1108,6 +1111,27 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "winit",
+]
+
+[[package]]
+name = "big-brain"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20da289393d5abee7043d7045bdc50bce06d6bffd29816c89934c6c31d8b8847"
+dependencies = [
+ "bevy",
+ "big-brain-derive",
+]
+
+[[package]]
+name = "big-brain-derive"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2166ff5dd1fae091887288f174ee6aef82f349b1a6edcf983fd379ab6df49c0d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -2837,6 +2861,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pancam"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "parking"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2912,6 +2943,14 @@ checksum = "4dd7d28ee937e54fe3080c91faa1c3a46c06de6252988a7f4592ba2310ef22a4"
 dependencies = [
  "fixedbitset",
  "indexmap",
+]
+
+[[package]]
+name = "physics_2d_plugin"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_rapier2d",
 ]
 
 [[package]]

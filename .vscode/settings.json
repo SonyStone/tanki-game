@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        ".\\physics-2d-plugin\\Cargo.toml"
+    ]
+}

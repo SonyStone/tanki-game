@@ -1,6 +1,8 @@
 use bevy::{input::mouse::MouseButtonInput, prelude::*, window::PrimaryWindow};
 use bevy_prototype_debug_lines::DebugLines;
-use bevy_rapier2d::prelude::{ExternalImpulse, QueryFilter, RapierContext};
+use bevy_rapier2d::prelude::{
+    ExternalImpulse, KinematicCharacterController, QueryFilter, RapierContext,
+};
 
 use crate::{first::components::LookAt, MainCamera};
 
@@ -36,10 +38,15 @@ pub fn player_movement(
 
 pub fn player_pull_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<(&mut Transform, &mut Player)>,
+    mut player_query: Query<(
+        &mut Transform,
+        &mut Player,
+        &mut KinematicCharacterController,
+    )>,
+    mut lines: ResMut<DebugLines>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut player) in player_query.iter_mut() {
+    for (mut transform, mut player, mut controller) in player_query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
         let key_directions = [
@@ -67,15 +74,30 @@ pub fn player_pull_movement(
 
         let speed = player.speed;
         let pull_distance = player.pull_distance;
+        let delta_time = time.delta_seconds();
+        let pull = &mut player.pull;
+        // controller.translation = Some(Vec2::from(direction) * speed * delta_time);
 
-        update_player_transform(
-            &mut transform,
-            &mut player.pull,
-            pull_distance,
-            speed,
-            direction,
-            time.delta_seconds(),
-        )
+        pull.translation += direction * speed * delta_time;
+
+        let delta_translation = pull.translation - transform.translation;
+        let rotation_yaw = delta_translation.y.atan2(delta_translation.x);
+        let rotation_pitch = delta_translation
+            .z
+            .atan2(delta_translation.truncate().length());
+
+        let horizontal_distance = pull_distance * rotation_pitch.cos();
+        transform.translation = Vec3::new(
+            pull.translation.x - horizontal_distance * rotation_yaw.cos(),
+            pull.translation.y - horizontal_distance * rotation_yaw.sin(),
+            pull.translation.z - pull_distance * rotation_pitch.sin(),
+        );
+
+        let rotation_quat_yaw = Quat::from_rotation_z(rotation_yaw);
+        let rotation_quat_pitch = Quat::from_rotation_x(rotation_pitch);
+        transform.rotation = rotation_quat_yaw * rotation_quat_pitch;
+
+        lines.line(transform.translation, pull.translation, 0.);
     }
 }
 
