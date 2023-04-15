@@ -19,15 +19,21 @@ impl Plugin for PhysicsPlugin {
 fn setup_physics(mut commands: Commands) {
     /* Create the ground. */
     commands.spawn((
+        Name::new("Ground"),
         Collider::cuboid(500.0, 50.0),
         TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)),
     ));
 
     /* Create the bouncing ball. */
     commands.spawn((
+        Name::new("Bouncing Ball"),
         RigidBody::Dynamic,
         Collider::ball(50.0),
         Restitution::coefficient(0.7),
-        TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)),
+        Damping {
+            linear_damping: 50.0,
+            angular_damping: 100.,
+        },
+        TransformBundle::from(Transform::from_xyz(0.0, 200.0, 0.0)),
     ));
 }

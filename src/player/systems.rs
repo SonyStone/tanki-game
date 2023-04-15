@@ -1,7 +1,7 @@
 use bevy::{input::mouse::MouseButtonInput, prelude::*, window::PrimaryWindow};
 use bevy_prototype_debug_lines::DebugLines;
 use bevy_rapier2d::prelude::{
-    ExternalImpulse, KinematicCharacterController, QueryFilter, RapierContext,
+    ExternalImpulse, KinematicCharacterController, QueryFilter, RapierContext, RigidBody, Velocity,
 };
 
 use crate::{first::components::LookAt, MainCamera};
@@ -42,11 +42,12 @@ pub fn player_pull_movement(
         &mut Transform,
         &mut Player,
         &mut KinematicCharacterController,
+        &mut Velocity,
     )>,
     mut lines: ResMut<DebugLines>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut player, mut controller) in player_query.iter_mut() {
+    for (mut transform, mut player, mut controller, mut velocity) in player_query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
         let key_directions = [
@@ -58,8 +59,6 @@ pub fn player_pull_movement(
             (KeyCode::W, Vec3::new(0.0, 1.0, 0.0)),
             (KeyCode::Down, Vec3::new(0.0, -1.0, 0.0)),
             (KeyCode::S, Vec3::new(0.0, -1.0, 0.0)),
-            // (KeyCode::E, Vec3::new(0.0, 0.0, 1.0)),
-            // (KeyCode::Q, Vec3::new(0.0, 0.0, -1.0)),
         ];
 
         for (key_code, dir) in key_directions.iter() {
@@ -146,7 +145,7 @@ fn look_at_z(
     local_transform.rotation = parent_rotation.inverse() * Quat::from_rotation_z(angle);
 }
 
-pub fn player_lookat(
+pub fn player_look_at(
     window_query: Query<&Window, With<PrimaryWindow>>,
     camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut turret_query: Query<(&mut Transform, &GlobalTransform), With<LookAt>>,
