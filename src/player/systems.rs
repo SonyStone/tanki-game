@@ -1,8 +1,6 @@
 use bevy::{input::mouse::MouseButtonInput, prelude::*, window::PrimaryWindow};
 use bevy_prototype_debug_lines::DebugLines;
-use bevy_rapier2d::prelude::{
-    ExternalImpulse, KinematicCharacterController, QueryFilter, RapierContext, RigidBody, Velocity,
-};
+use bevy_rapier2d::prelude::{ExternalImpulse, QueryFilter, RapierContext, Velocity};
 
 use crate::{first::components::LookAt, MainCamera};
 
@@ -38,16 +36,11 @@ pub fn player_movement(
 
 pub fn player_pull_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<(
-        &mut Transform,
-        &mut Player,
-        &mut KinematicCharacterController,
-        &mut Velocity,
-    )>,
+    mut player_query: Query<(&mut PlayerPull, &mut Velocity)>,
     mut lines: ResMut<DebugLines>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut player, mut controller, mut velocity) in player_query.iter_mut() {
+    for (mut player, mut velocity) in player_query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
         let key_directions = [
@@ -72,60 +65,10 @@ pub fn player_pull_movement(
         }
 
         let speed = player.speed;
-        let pull_distance = player.pull_distance;
         let delta_time = time.delta_seconds();
-        let pull = &mut player.pull;
-        // controller.translation = Some(Vec2::from(direction) * speed * delta_time);
 
-        pull.translation += direction * speed * delta_time;
-
-        let delta_translation = pull.translation - transform.translation;
-        let rotation_yaw = delta_translation.y.atan2(delta_translation.x);
-        let rotation_pitch = delta_translation
-            .z
-            .atan2(delta_translation.truncate().length());
-
-        let horizontal_distance = pull_distance * rotation_pitch.cos();
-        transform.translation = Vec3::new(
-            pull.translation.x - horizontal_distance * rotation_yaw.cos(),
-            pull.translation.y - horizontal_distance * rotation_yaw.sin(),
-            pull.translation.z - pull_distance * rotation_pitch.sin(),
-        );
-
-        let rotation_quat_yaw = Quat::from_rotation_z(rotation_yaw);
-        let rotation_quat_pitch = Quat::from_rotation_x(rotation_pitch);
-        transform.rotation = rotation_quat_yaw * rotation_quat_pitch;
-
-        lines.line(transform.translation, pull.translation, 0.);
+        velocity.linvel = direction.truncate() * speed * delta_time;
     }
-}
-
-fn update_player_transform(
-    transform: &mut Transform,
-    pull: &mut Transform,
-    pull_distance: f32,
-    speed: f32,
-    direction: Vec3,
-    delta_time: f32,
-) {
-    pull.translation += direction * speed * delta_time;
-
-    let delta_translation = pull.translation - transform.translation;
-    let rotation_yaw = delta_translation.y.atan2(delta_translation.x);
-    let rotation_pitch = delta_translation
-        .z
-        .atan2(delta_translation.truncate().length());
-
-    let horizontal_distance = pull_distance * rotation_pitch.cos();
-    transform.translation = Vec3::new(
-        pull.translation.x - horizontal_distance * rotation_yaw.cos(),
-        pull.translation.y - horizontal_distance * rotation_yaw.sin(),
-        pull.translation.z - pull_distance * rotation_pitch.sin(),
-    );
-
-    let rotation_quat_yaw = Quat::from_rotation_z(rotation_yaw);
-    let rotation_quat_pitch = Quat::from_rotation_x(rotation_pitch);
-    transform.rotation = rotation_quat_yaw * rotation_quat_pitch;
 }
 
 use bevy::input::ButtonState;
@@ -186,13 +129,14 @@ pub fn player_raycast(
                     let ray_pos = Vec2::from((transform.translation.x, transform.translation.y));
                     let diff = cursor_position - ray_pos;
                     let ray_dir = diff.normalize();
+                    let ray_pos = ray_pos + ray_dir * 30.;
 
                     let max_toi = diff.length();
                     let solid = true;
                     let filter = QueryFilter::default().exclude_rigid_body(entity);
 
                     lines.line(
-                        Vec3::from((ray_pos, 0.)),
+                        ray_pos.extend(0.),
                         Vec3::from((ray_pos + ray_dir * max_toi, 0.)),
                         0.0,
                     );
@@ -205,12 +149,10 @@ pub fn player_raycast(
                         let hit_point = ray_pos + ray_dir * toi;
 
                         commands.entity(entity).insert(ExternalImpulse::at_point(
-                            ray_dir * 1.,
+                            ray_dir * 100.,
                             hit_point,
                             Vec2::ZERO,
                         ));
-
-                        println!("Entity {:?} hit at point {}", entity, hit_point);
                     }
                 }
             }

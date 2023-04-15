@@ -39,10 +39,7 @@ fn setup(mut commands: Commands) {
                 linear_damping: 50.0,
                 angular_damping: 50.,
             },
-            Velocity {
-                linvel: Vec2::new(1., 2.),
-                angvel: 0.4,
-            },
+            Velocity::default(),
             Collider::cuboid(20., 15.),
             Restitution::coefficient(0.7),
             ExternalImpulse::default(),

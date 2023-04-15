@@ -1,17 +1,12 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::prelude::*;
 
 use super::components::*;
-use super::objects::*;
-use crate::player::components::Player;
+use crate::player::components::*;
 
-pub fn setup_system(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+pub fn setup_system(mut commands: Commands) {
     let turret = shapes::Circle {
         radius: 10.0,
         ..default()
@@ -39,6 +34,7 @@ pub fn setup_system(
 
     let body = commands
         .spawn((
+            Name::new("Player Body"),
             ShapeBundle {
                 path: GeometryBuilder::new().add(&body).build(),
                 transform: Transform {
@@ -55,16 +51,12 @@ pub fn setup_system(
                 pull_distance: 10.,
                 ..default()
             },
-            Name::new("Player Body"),
             RigidBody::Dynamic,
             Damping {
-                linear_damping: 0.5,
-                angular_damping: 1.,
+                linear_damping: 50.0,
+                angular_damping: 25.,
             },
-            Velocity {
-                linvel: Vec2::new(1., 2.),
-                angvel: 0.4,
-            },
+            Velocity::default(),
             Collider::cuboid(20., 15.),
             Restitution::coefficient(0.7),
             ExternalImpulse::default(),
@@ -110,29 +102,65 @@ pub fn setup_system(
     commands.entity(body).add_child(gun);
     commands.entity(gun).add_child(turret);
 
+    let joint_controller = RevoluteJointBuilder::new()
+        .local_anchor1(Vec2::new(10.0, 0.0))
+        .local_anchor2(Vec2::new(0.0, 0.0));
+
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: (meshes.add(create_triangle())).into(),
-            material: materials.add(ColorMaterial::from(Color::PURPLE)),
-            transform: Transform::from_translation(Vec3::new(-120., 0., 0.)),
+        Name::new("Player Controller"),
+        ImpulseJoint::new(body, joint_controller),
+        RigidBody::Dynamic,
+        Collider::ball(5.),
+        GlobalTransform::default(),
+        Transform {
+            translation: Vec3::new(10.0, 0.0, 0.0),
             ..default()
         },
-        Name::new("Triangle"),
+        Velocity::default(),
+        PlayerPull { speed: 15000. },
+        Damping {
+            linear_damping: 1.0,
+            angular_damping: 100.,
+        },
+        ColliderMassProperties::Mass(0.5),
+        CollisionGroups::new(Group::NONE, Group::NONE),
     ));
 }
 
-const NUMBER_OF_ENEMIES: i32 = 30;
+const NUMBER_OF_ENEMIES: i32 = 300;
 
 pub fn spawn_enemies(mut commands: Commands, window_query: Query<&Window, With<PrimaryWindow>>) {
     for window in window_query.iter() {
+        let enemy = shapes::Circle {
+            radius: 10.0,
+            ..default()
+        };
+
         for _ in 0..NUMBER_OF_ENEMIES {
-            let random = Vec3::new(
+            let transform = Vec3::new(
                 (random::<f32>() * window.width()) - window.width() / 2.0,
                 (random::<f32>() * window.height()) - window.height() / 2.0,
                 random::<f32>(),
             );
 
-            commands.spawn(create_element(random));
+            commands.spawn((
+                ShapeBundle {
+                    path: GeometryBuilder::new().add(&enemy).build(),
+                    transform: Transform::from_translation(transform),
+                    ..default()
+                },
+                Fill::color(Color::hex("bf3030").unwrap()),
+                Stroke::new(Color::hex("191919").unwrap(), 2.0),
+                ExampleShape,
+                Name::new("Enemy"),
+                RigidBody::Dynamic,
+                Collider::ball(10.0),
+                Restitution::coefficient(0.7),
+                Damping {
+                    linear_damping: 50.,
+                    angular_damping: 10.0,
+                },
+            ));
         }
     }
 }
