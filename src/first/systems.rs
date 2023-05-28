@@ -1,10 +1,63 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_prototype_lyon::prelude::*;
+use bevy_prototype_lyon::{path, prelude::*};
 use bevy_rapier2d::prelude::*;
 use rand::prelude::*;
 
 use super::components::*;
 use crate::player::components::*;
+
+#[derive(Bundle)]
+struct TankBodyBundle {
+    #[bundle]
+    shape: ShapeBundle,
+    fill: Fill,
+    stroke: Stroke,
+}
+
+impl TankBodyBundle {
+    fn new() -> Self {
+        let body = shapes::Polygon {
+            points: vec![
+                Vec2::new(-20.0, -15.0),
+                Vec2::new(-20.0, 15.0),
+                Vec2::new(20.0, 15.0),
+                Vec2::new(20.0, -15.0),
+            ],
+            closed: true,
+        };
+
+        let mut path_builder = path::PathBuilder::new();
+        path_builder.move_to(Vec2::new(-20.0, -15.0));
+        path_builder.line_to(Vec2::new(20.0, 0.0));
+        path_builder.line_to(Vec2::new(-20.0, 15.0));
+        let path = path_builder.build();
+
+        let mut stroke = Stroke::new(Color::hex("191919").unwrap(), 2.0);
+        stroke.options.line_join = LineJoin::Round;
+
+        let mut fill = Fill::color(Color::hex("bf3030").unwrap());
+        fill.options.fill_rule = FillRule::NonZero;
+
+        Self {
+            shape: ShapeBundle {
+                path: GeometryBuilder::new().add(&body).add(&path).build(),
+                transform: Transform {
+                    translation: Vec3::new(0.0, 0.0, 0.0),
+                    ..default()
+                },
+                ..default()
+            },
+            fill,
+            stroke,
+        }
+    }
+}
+
+impl Default for TankBodyBundle {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub fn setup_system(mut commands: Commands) {
     let turret = shapes::Circle {
@@ -22,29 +75,10 @@ pub fn setup_system(mut commands: Commands) {
         closed: true,
     };
 
-    let body = shapes::Polygon {
-        points: vec![
-            Vec2::new(-20.0, -15.0),
-            Vec2::new(-20.0, 15.0),
-            Vec2::new(20.0, 15.0),
-            Vec2::new(20.0, -15.0),
-        ],
-        closed: true,
-    };
-
     let body = commands
         .spawn((
             Name::new("Player Body"),
-            ShapeBundle {
-                path: GeometryBuilder::new().add(&body).build(),
-                transform: Transform {
-                    translation: Vec3::new(0.0, 0.0, 0.0),
-                    ..default()
-                },
-                ..default()
-            },
-            Fill::color(Color::hex("bf3030").unwrap()),
-            Stroke::new(Color::hex("191919").unwrap(), 2.0),
+            TankBodyBundle::new(),
             ExampleShape,
             Player {
                 speed: 250.,

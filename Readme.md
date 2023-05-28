@@ -32,7 +32,7 @@ rapier and egui inspector support
 
 [colliders](https://rapier.rs/docs/user_guides/rust/colliders)
 
-### ✅+- Нужно сделать charecter controller
+### ✅ Нужно сделать charecter controller
 
 [Making A Physics Based Character Controller In Unity (for Very Very Valet)](https://www.youtube.com/watch?v=qdskE8PJy6Q)
 
@@ -41,6 +41,8 @@ rapier and egui inspector support
 [rapier character_controller](https://rapier.rs/docs/user_guides/bevy_plugin/character_controller/)
 
 Скопировал контролер из своего прототипа на javascript. Теперь его нужно лучше адоптировать в rapier
+
+Сделал charecter controller с помощью rapier
 
 ### ⬜ AI
 
@@ -71,6 +73,12 @@ https://github.com/makspll/bevy_mod_scripting
 ### ⬜ Multyplayer? Netcode?
     
 https://johanhelsing.studio/posts/extreme-bevy
+https://tokio.rs/
+https://github.com/lucaspoffo/renet
+https://www.youtube.com/watch?v=fBHO0yptg1Y
+https://buterajay.medium.com/game-server-in-150-lines-of-rust-ce1782199907
+
+Отложу это на потом. После создания прототипа.
 
 ### ⬜ Refactor
 
